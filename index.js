@@ -1,53 +1,82 @@
 const { Client, LocalAuth } = require("whatsapp-web.js");
-const qrcode = require("qrcode-terminal");
+const qrcode = require("qrcode");
+const fs = require("fs");
+const path = require("path");
+const express = require("express");
 const dotenv = require("dotenv");
+const fetch = require("node-fetch");
+const FormData = require("form-data");
 
 dotenv.config();
 
+const app = express();
+const port = process.env.PORT || 3000; // Используем переменную среды для порта (для Railway)
 
+const qrFilePath = path.join(__dirname, "qr.png");
+
+// WhatsApp Web клиент
 const client = new Client({
-  authStrategy: new LocalAuth({ dataPath: "/data" }),
+  authStrategy: new LocalAuth(),
   puppeteer: {
     headless: true,
-    args: ['--no-sandbox', '--disable-setuid-sandbox']
+    args: ["--no-sandbox", "--disable-setuid-sandbox"],
   },
 });
 
-const telegramBotToken = process.env.BOT_TOKEN  // Укажи свой токен бота
-const chatId = 7325647133;  // Укажи свой ID чата
+// Telegram bot
+const TELEGRAM_BOT_TOKEN = process.env.BOT_TOKEN;
+const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
 
-client.on('qr', (qr) => {
-  // Генерируем QR и сохраняем в файл
-  qrcode.toFile('qr.png', qr, (err) => {
-    if (err) {
-      console.error('Ошибка при генерации QR:', err);
-      return;
-    }
+// Генерация QR-кода сразу при запуске
+const generateQR = async () => {
+  try {
+    console.log("✅ QR-код сгенерирован");
+  } catch (err) {
+    console.error("❌ Ошибка генерации QR:", err);
+  }
+};
 
-    // Отправляем изображение через fetch
-    sendQrToTelegram('qr.png');
-  });
+// Эндпоинт для получения сохраненного QR-кода
+app.get("/qr", (req, res) => {
+  // Проверяем, существует ли файл
+  if (fs.existsSync(qrFilePath)) {
+    res.sendFile(qrFilePath); // Отправляем файл как изображение
+  } else {
+    res
+      .status(404)
+      .send("❌ QR-код не найден. Сначала его нужно сгенерировать.");
+  }
 });
 
+// Логика для отправки QR в Telegram
+client.on("qr", async (qr) => {
+  try {
+    await qrcode.toFile(qrFilePath, qr); // Генерация QR и сохранение в файл
+  } catch (err) {
+    console.error("❌ Ошибка при отправке QR в Telegram:", err.message);
+  }
+});
+
+// Инициализация WhatsApp Web клиента
 client.on("ready", () => {
   console.log("✅ WhatsApp client is ready!");
+  generateQR(); // Генерация QR сразу после запуска
 });
 
+// Слушаем сообщения
 client.on("message", async (message) => {
   console.log("📩 Новое сообщение:", message.body);
 
   const phone = message.from.split("@")[0];
-  const name = message.author || phone; // защита от undefined
+  const name = message.author || phone;
   const str = message.body.trim().split(" ");
   const preResStr = str[str.length - 1];
-  const session = (preResStr.split('_')[1] || "").trim();
-
-  if (!session) {
-    return; // нет session id — игнорируем
-  }
+  const session = (preResStr.split("_")[1] || "").trim();
 
   try {
-    const res = await fetch(`${process.env.API_URI}/compare-data/${phone}/${session}/${name}`);
+    const res = await fetch(
+      `${process.env.API_URI}/compare-data/${phone}/${session}/${name}`
+    );
     if (res.ok) {
       await message.reply("Hello, our manager will contact you soon");
     }
@@ -56,26 +85,10 @@ client.on("message", async (message) => {
   }
 });
 
-async function sendQrToTelegram(imagePath) {
-  const formData = new FormData();
-  formData.append('chat_id', chatId);
-  formData.append('photo', fs.createReadStream(imagePath));  // Читаем изображение
+// Запускаем сервер Express
+app.listen(port, () => {
+  console.log(`QR-код сервер запущен на http://localhost:${port}`);
+});
 
-  try {
-    const response = await fetch(`https://api.telegram.org/bot${telegramBotToken}/sendPhoto`, {
-      method: 'POST',
-      body: formData
-    });
-
-    const result = await response.json();
-    if (result.ok) {
-      console.log('QR-код успешно отправлен в Telegram!');
-    } else {
-      console.log('Ошибка отправки в Telegram:', result.description);
-    }
-  } catch (error) {
-    console.error('Ошибка при отправке запроса:', error.message);
-  }
-}
-
+// Инициализация клиента WhatsApp
 client.initialize();
