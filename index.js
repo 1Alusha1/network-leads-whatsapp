@@ -14,9 +14,18 @@ const client = new Client({
   },
 });
 
+const telegramBot = new TelegramBot(procces.env.BOT_TOKEN);  // Укажи свой токен бота
+const chatId = 7325647133;  // Укажи свой ID чата
+
 client.on('qr', (qr) => {
-  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?data=${qr}&size=200x200`;
-  console.log(`QR Code URL: ${qrUrl}`);  // Можешь использовать это URL и отправить на email, Telegram и т.д.
+  qrcode.toFile('qr.png', qr, (err) => {
+    if (err) {
+      console.error('Ошибка при генерации QR:', err);
+      return;
+    }
+    // Отправка QR как картинки в Telegram
+    telegramBot.sendPhoto(chatId, 'qr.png');
+  });
 });
 
 client.on("ready", () => {
