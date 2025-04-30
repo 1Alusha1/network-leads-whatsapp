@@ -14,8 +14,9 @@ const client = new Client({
   },
 });
 
-client.on("qr", (qr) => {
-  qrcode.generate(qr, { small: true });
+client.on('qr', (qr) => {
+  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?data=${qr}&size=200x200`;
+  console.log(`QR Code URL: ${qrUrl}`);  // Можешь использовать это URL и отправить на email, Telegram и т.д.
 });
 
 client.on("ready", () => {
