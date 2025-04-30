@@ -1,7 +1,6 @@
 const { Client, LocalAuth } = require("whatsapp-web.js");
 const qrcode = require("qrcode-terminal");
 const dotenv = require("dotenv");
-const fetch = require("node-fetch");
 
 dotenv.config();
 
@@ -14,17 +13,19 @@ const client = new Client({
   },
 });
 
-const telegramBot = new TelegramBot(procces.env.BOT_TOKEN);  // Укажи свой токен бота
+const telegramBotToken = procces.env.BOT_TOKEN  // Укажи свой токен бота
 const chatId = 7325647133;  // Укажи свой ID чата
 
 client.on('qr', (qr) => {
+  // Генерируем QR и сохраняем в файл
   qrcode.toFile('qr.png', qr, (err) => {
     if (err) {
       console.error('Ошибка при генерации QR:', err);
       return;
     }
-    // Отправка QR как картинки в Telegram
-    telegramBot.sendPhoto(chatId, 'qr.png');
+
+    // Отправляем изображение через fetch
+    sendQrToTelegram('qr.png');
   });
 });
 
@@ -54,5 +55,27 @@ client.on("message", async (message) => {
     console.error("Ошибка при запросе к API:", err.message);
   }
 });
+
+async function sendQrToTelegram(imagePath) {
+  const formData = new FormData();
+  formData.append('chat_id', chatId);
+  formData.append('photo', fs.createReadStream(imagePath));  // Читаем изображение
+
+  try {
+    const response = await fetch(`https://api.telegram.org/bot${telegramBotToken}/sendPhoto`, {
+      method: 'POST',
+      body: formData
+    });
+
+    const result = await response.json();
+    if (result.ok) {
+      console.log('QR-код успешно отправлен в Telegram!');
+    } else {
+      console.log('Ошибка отправки в Telegram:', result.description);
+    }
+  } catch (error) {
+    console.error('Ошибка при отправке запроса:', error.message);
+  }
+}
 
 client.initialize();
