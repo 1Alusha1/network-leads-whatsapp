@@ -13,7 +13,7 @@ const client = new Client({
   },
 });
 
-const telegramBotToken = procces.env.BOT_TOKEN  // Укажи свой токен бота
+const telegramBotToken = process.env.BOT_TOKEN  // Укажи свой токен бота
 const chatId = 7325647133;  // Укажи свой ID чата
 
 client.on('qr', (qr) => {
