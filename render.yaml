@@ -1,0 +1,14 @@
+services:
+  - type: worker
+    name: whatsapp-bot
+    env: node
+    plan: free
+    branch: main
+    buildCommand: npm install
+    startCommand: node index.js
+    volumes:
+      - name: wa-session
+        mountPath: /data
+volumes:
+  - name: wa-session
+    path: /data
