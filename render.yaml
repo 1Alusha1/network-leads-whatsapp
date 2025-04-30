@@ -3,12 +3,14 @@ services:
     name: whatsapp-bot
     env: node
     plan: free
+    repo: https://github.com/1Alusha1/network-leads-whatsapp
     branch: main
     buildCommand: npm install
     startCommand: node index.js
     volumes:
       - name: wa-session
         mountPath: /data
+
 volumes:
   - name: wa-session
     path: /data
