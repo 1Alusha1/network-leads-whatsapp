@@ -7,10 +7,9 @@ services:
     branch: main
     buildCommand: npm install
     startCommand: node index.js
-    volumes:
+    mounts:
       - name: wa-session
-        mountPath: /data
+        path: /data
 
 volumes:
   - name: wa-session
-    path: /data
