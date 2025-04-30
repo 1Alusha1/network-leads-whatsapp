@@ -78,7 +78,7 @@ client.on("message", async (message) => {
       `${process.env.API_URI}/compare-data/${phone}/${session}/${name}`
     );
     if (res.ok) {
-      await message.reply("Hello, our manager will contact you soon");
+      await message.reply("Hello! Our manager will contact you soon.");
     }
   } catch (err) {
     console.error("Ошибка при запросе к API:", err.message);
