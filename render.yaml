@@ -6,12 +6,6 @@ services:
     branch: main
     buildCommand: npm install
     startCommand: node index.js
-    mounts:
-      - name: wa-session
-        path: /data
     envVars:
       - key: API_URI
         value: https://example.com/api
-
-volumes:
-  - name: wa-session
