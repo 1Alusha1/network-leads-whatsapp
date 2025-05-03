@@ -75,7 +75,7 @@ client.on("message", async (message) => {
 
   try {
     const res = await fetch(
-      `${process.env.API_URI}/compare-data/${phone}/${session}/${name}`
+      `${process.env.API_URI}/compare-data?phone=${phone}&sessionId${session}&name=${name}`
     );
     if (res.ok) {
       await message.reply("Hello! Our manager will contact you soon.");
