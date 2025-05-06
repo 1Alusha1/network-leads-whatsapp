@@ -65,6 +65,11 @@ client.on("ready", () => {
 
 // Слушаем сообщения
 client.on("message", async (message) => {
+  // Обрабатываем только обычные текстовые сообщения
+  if (message.type !== 'chat' || !message.body) {
+    return;
+  }
+
   console.log("📩 Новое сообщение:", message.body);
 
   const phone = message.from.split("@")[0];
@@ -84,6 +89,7 @@ client.on("message", async (message) => {
     console.error("Ошибка при запросе к API:", err.message);
   }
 });
+
 
 // Запускаем сервер Express
 app.listen(port, () => {
