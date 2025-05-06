@@ -66,11 +66,13 @@ client.on("ready", () => {
 // Слушаем сообщения
 client.on("message", async (message) => {
   // Обрабатываем только обычные текстовые сообщения
+  console.log("📩 Тип сообщение:", message.type);
+  
   if (message.type !== 'chat' || !message.body) {
     return;
   }
 
-  console.log("📩 Новое сообщение:", message.body);
+  
 
   const phone = message.from.split("@")[0];
   const name = message.author || phone;
@@ -78,6 +80,10 @@ client.on("message", async (message) => {
   const preResStr = str[str.length - 1];
   const session = (preResStr.split("_")[1] || "").trim();
 
+  console.log("📩 Сессия:", session);
+  console.log("📩 Новое сообщение:", message.body);
+  console.log("📩 Автор:", message.author);
+  
   try {
     const res = await fetch(
       `${process.env.API_URI}/compare-data?phone=${phone}&sessionId=${session}&name=${name}`
